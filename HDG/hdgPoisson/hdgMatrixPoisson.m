@@ -3,6 +3,7 @@ function [KK, f, QQ, UU, Qf, Uf] = hdgMatrixPoisson(muElem,X,T,F,referenceElemen
 nOfFaces = max(max(F));
 nOfElements = size(T,1);
 nOfInteriorFaces = size(infoFaces.intFaces,1);
+%nofNeumanFaces = size(infoFaces.extFaces_N,1);
 nOfFaceNodes = size(referenceElement.NodesCoord1d,1);
 nDOF = nOfFaces*nOfFaceNodes;
 f = zeros(nDOF,1);
@@ -14,10 +15,15 @@ for iElem = 1:nOfElements
     Te = T(iElem,:);
     Xe = X(Te,:);
     Fe = F(iElem,:);
-    isFeInterior = (Fe <= nOfInteriorFaces); %Boolean (1=interior face)
+    isFeInterior = (Fe <= nOfInteriorFaces); %Boolean (1=interior face or Neuman)
+%     Fext1 = ismember(Fe(1),infoFaces.extFaces_N(:,1)); %Boolean (1=Neuman face)
+%     Fext2 = ismember(Fe(2),infoFaces.extFaces_N(:,1));
+%     Fext3 = ismember(Fe(3),infoFaces.extFaces_N(:,1));
+    
+    Fext_N = ismember(iElem,infoFaces.extFaces_N(:,1));
 
     % elemental matrices
-    [Qe,Ue,Qfe,Ufe,Alq,Alu,All] = KKeElementalMatricesIsoParametric(muElem(iElem),Xe,referenceElement,tau(iElem,:));
+    [Qe,Ue,Qfe,Ufe,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(muElem(iElem),Xe,referenceElement,tau(iElem,:),Fext_N);
     
     % Interior faces seen from the second element are flipped to have
     % proper orientation
@@ -30,6 +36,7 @@ for iElem = 1:nOfElements
     
     Qe=Qe(:,indL);    Ue=Ue(:,indL);
     Alq=Alq(indL,:);  Alu=Alu(indL,:);   All=All(indL,indL);
+    fqN=fqN(indL,:);
     
     %The local problem solver is stored for postprocess
     QQ{iElem} = sparse(Qe);  UU{iElem} = sparse(Ue);
@@ -37,7 +44,7 @@ for iElem = 1:nOfElements
     
     %Elemental matrices to be assembled
     KKe = Alq*Qe + Alu*Ue + All;
-    ffe = -(Alq*Qfe + Alu*Ufe);
+    ffe = -(Alq*Qfe + Alu*Ufe)+fqN;
     
     aux = (1:nOfFaceNodes);
     indRC = [(Fe(1)-1)*nOfFaceNodes + aux,(Fe(2)-1)*nOfFaceNodes + aux,(Fe(3)-1)*nOfFaceNodes + aux];
@@ -54,7 +61,7 @@ KK = sparse(ind_i,ind_j,coef_K);
 
 %%
 %% ELEMENTAL MATRIX
-function [Q,U,Qf,Uf,Alq,Alu,All] = KKeElementalMatricesIsoParametric(mu,Xe,referenceElement,tau)
+function [Q,U,Qf,Uf,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(mu,Xe,referenceElement,tau,Fext_N)
 
 nOfElementNodes = size(referenceElement.NodesCoord,1);
 nOfFaceNodes = size(referenceElement.NodesCoord1d,1);
@@ -88,6 +95,26 @@ Ny = invJ21*Nxi + invJ22*Neta;
 Xg = N*Xe;
 sourceTerm = sourcePoisson(Xg,mu);
 fe = N'*(dvolu*sourceTerm);
+
+%Computation of Neuman term
+%mario = 1;
+if Fext_N == 1
+    Xg = N*Xe;
+    q_N = neumanPoisson(Xg);
+    for j=1:length(Xe)
+        if Xe(j,2) ==0
+           q_N(j) = q_N(j);
+        else
+            q_N(j)=0; 
+        end
+    end
+    fqN = N'*(dvolu*q_N);
+    fqN = -[fqN;zeros(nOfElementNodes/2,1)];
+    %disp(mario);
+else
+    fqN = zeros(nOfElementNodes+nOfFaces,1);
+end
+
 %Elemental matrices
 Me = N'*(dvolu*N);
 Aqq = zeros(2*size(Me));
@@ -124,10 +151,10 @@ end
 Aqu = -mu*Auq'; Aul = -Alu'; Aql = mu*Alq';
 A = [Auu Auq; Aqu Aqq];
 UQ = -A\[Aul;Aql];
-fUQ= A\[fe;zeros(2*nOfElementNodes,1)];
+fUQ= A\[fe;zeros(2*nOfElementNodes,1)]; %6+12
 
 U = UQ(1:nOfElementNodes,:); 
-Uf=fUQ(1:nOfElementNodes); % maps lamba into U
+Uf=fUQ(1:nOfElementNodes); % maps lamba into U (1-6)
 
 Q = UQ(nOfElementNodes+1:end,:); 
-Qf=fUQ(nOfElementNodes+1:end); % maps lamba into Q
+Qf=fUQ(nOfElementNodes+1:end); % maps lamba into Q (7-12)

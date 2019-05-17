@@ -36,7 +36,6 @@ figure(1),clf,plotMesh(X,T);
 %% HDG preprocess
 [F, infoFaces] = hdg_preprocess(T);
 nOfFaces = max(max(F)); 
-
 infoFaces = ExtFace_class(infoFaces,X,T);
 
 %% Viscosity parameter
@@ -56,11 +55,12 @@ disp('Loop in elements...')
 %Dirichlet face nodal coordinates
 nOfFaceNodes = degree+1; 
 nOfInteriorFaces = size(infoFaces.intFaces,1);
-nOfExteriorFaces = size(infoFaces.extFaces,1); 
+nOfExteriorFaces_D = size(infoFaces.extFaces_D,1);
+nOfExteriorFaces_N = size(infoFaces.extFaces_N,1);
 
-uDirichlet = computeProjectionFaces(@analyticalPoisson,infoFaces.extFaces,X,T,referenceElement);
-dofDirichlet= nOfInteriorFaces*nOfFaceNodes + (1:nOfExteriorFaces*nOfFaceNodes);
-dofUnknown = 1:nOfInteriorFaces*nOfFaceNodes;
+uDirichlet = computeProjectionFaces(@analyticalPoisson,infoFaces.extFaces_D,X,T,referenceElement);
+dofDirichlet= (nOfInteriorFaces+nOfExteriorFaces_N)*nOfFaceNodes + (1:nOfExteriorFaces_D*nOfFaceNodes);
+dofUnknown = 1:nOfInteriorFaces*nOfFaceNodes+nOfExteriorFaces_N*nOfFaceNodes;
 
 % System reduction (Dirichlet faces  are set to prescribed value)
 f = f(dofUnknown)-K(dofUnknown,dofDirichlet)*uDirichlet;
@@ -69,7 +69,7 @@ K = K(dofUnknown,dofUnknown);
 % Face solution
 disp('Solving linear system...')
 lambda = K\f; 
-uhat = [lambda(1:nOfInteriorFaces*nOfFaceNodes); uDirichlet];
+uhat = [lambda(1:(nOfInteriorFaces+nOfExteriorFaces_N)*nOfFaceNodes); uDirichlet];
 
 % Elemental solution
 disp('Calculating element by element solution...')
