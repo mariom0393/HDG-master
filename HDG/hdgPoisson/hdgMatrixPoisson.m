@@ -20,10 +20,15 @@ for iElem = 1:nOfElements
 %     Fext2 = ismember(Fe(2),infoFaces.extFaces_N(:,1));
 %     Fext3 = ismember(Fe(3),infoFaces.extFaces_N(:,1));
     
-    Fext_N = ismember(iElem,infoFaces.extFaces_N(:,1));
-
+    [Fext_N,ind_N] = ismember(iElem,infoFaces.extFaces_N(:,1));
+    if Fext_N ==1
+    face_N_id = infoFaces.extFaces_N(ind_N,2);
+    else
+        face_N_id =0;
+    end
+  
     % elemental matrices
-    [Qe,Ue,Qfe,Ufe,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(muElem(iElem),Xe,referenceElement,tau(iElem,:),Fext_N);
+    [Qe,Ue,Qfe,Ufe,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(muElem(iElem),Xe,referenceElement,tau(iElem,:),Fext_N,face_N_id);
     
     % Interior faces seen from the second element are flipped to have
     % proper orientation
@@ -36,7 +41,7 @@ for iElem = 1:nOfElements
     
     Qe=Qe(:,indL);    Ue=Ue(:,indL);
     Alq=Alq(indL,:);  Alu=Alu(indL,:);   All=All(indL,indL);
-    fqN=fqN(indL,:);
+    %fqN=fqN(indL,:);
     
     %The local problem solver is stored for postprocess
     QQ{iElem} = sparse(Qe);  UU{iElem} = sparse(Ue);
@@ -61,7 +66,7 @@ KK = sparse(ind_i,ind_j,coef_K);
 
 %%
 %% ELEMENTAL MATRIX
-function [Q,U,Qf,Uf,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(mu,Xe,referenceElement,tau,Fext_N)
+function [Q,U,Qf,Uf,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(mu,Xe,referenceElement,tau,Fext_N,face_N_id)
 
 nOfElementNodes = size(referenceElement.NodesCoord,1);
 nOfFaceNodes = size(referenceElement.NodesCoord1d,1);
@@ -70,8 +75,8 @@ nOfFaces = 3; %triangles
 
 % Information of the reference element
 N = referenceElement.N;
-Nxi = referenceElement.Nxi; Neta = referenceElement.Neta;
-N1d = referenceElement.N1d; Nx1d = referenceElement.N1dxi;
+Nxi = referenceElement.Nxi; Neta = referenceElement.Neta; %elemental
+N1d = referenceElement.N1d; Nx1d = referenceElement.N1dxi; %face
 %Numerical quadrature
 IPw_f = referenceElement.IPweights1d; ngf = length(IPw_f);
 IPw = referenceElement.IPweights; ngauss = length(IPw);
@@ -96,37 +101,18 @@ Xg = N*Xe;
 sourceTerm = sourcePoisson(Xg,mu);
 fe = N'*(dvolu*sourceTerm);
 
-%Computation of Neuman term
-%mario = 1;
-if Fext_N == 1
-    Xg = N*Xe;
-    q_N = neumanPoisson(Xg);
-    for j=1:length(Xe)
-        if Xe(j,2) ==0
-           q_N(j) = q_N(j);
-        else
-            q_N(j)=0; 
-        end
-    end
-    fqN = N'*(dvolu*q_N);
-    fqN = -[fqN;zeros(nOfElementNodes/2,1)];
-    %disp(mario);
-else
-    fqN = zeros(nOfElementNodes+nOfFaces,1);
-end
-
 %Elemental matrices
 Me = N'*(dvolu*N);
 Aqq = zeros(2*size(Me));
 aux = 1:2:2*nOfElementNodes; aux2 = 2:2:2*nOfElementNodes;
-Aqq(aux,aux)=Me; Aqq(aux2,aux2)=Me;
-Auq = zeros(nOfElementNodes,2*nOfElementNodes);
+Aqq(aux,aux)=Me; Aqq(aux2,aux2)=Me; %Aqq
+Auq = zeros(nOfElementNodes,2*nOfElementNodes); %Auq
 Auq(:,aux) = N'*(dvolu*Nx); %x derivatives & 1st component of q
 Auq(:,aux2)= N'*(dvolu*Ny); %y derivatives & 2nd component of q
 
 %% Faces computations
 Alq = zeros(3*nOfFaceNodes,2*nOfElementNodes);
-Auu = zeros(nOfElementNodes,nOfElementNodes);
+Auu = zeros(nOfElementNodes,nOfElementNodes); 
 Alu = zeros(3*nOfFaceNodes,nOfElementNodes);
 All = zeros(3*nOfFaceNodes,3*nOfFaceNodes);
 %Is it possible to remove this loop?
@@ -145,6 +131,22 @@ for iface = 1:nOfFaces
     Auu(nodes,nodes) = Auu(nodes,nodes) + Auu_f;
     Alu(ind_face,nodes) = Alu(ind_face,nodes) + Auu_f;
     All(ind_face,ind_face) = -Auu_f;
+end
+
+%Neuman term
+fqN = zeros(nOfFaces*nOfFaceNodes,1); 
+if Fext_N == 1
+    nodes_N = faceNodes(face_N_id,:); 
+    Xf_N = Xe(nodes_N,:);
+    aux_f = N1d'*(spdiags(dline,0,ngf,ngf)*neumanPoisson(N1d*Xf_N));
+
+    if face_N_id == 1
+        fqN(1:3) = aux_f;
+    elseif face_N_id == 2
+        fqN(4:6) = aux_f;
+    else
+        fqN(7:9) = aux_f;
+    end
 end
 
 % Elemental mapping
