@@ -1,11 +1,18 @@
-function [F infoFaces] = hdg_preprocess(T)
+function [F, infoFaces] = hdg_preprocess(T,X)
 
 % create infoFaces
-[intFaces extFaces] = GetFaces(T(:,1:3));
+[intFaces, extFaces] = GetFaces(T(:,1:3));
+
+infoFaces.intFaces = intFaces;
+infoFaces.extFaces = extFaces;
+
+infoFaces = ExtFace_class(infoFaces,X,T);
 
 nOfElements = size(T,1);
 nOfInteriorFaces = size(intFaces,1);
 nOfExteriorFaces = size(extFaces,1);
+nOfExteriorFaces_N = size(infoFaces.extFaces_N,1);
+nOfExteriorFaces_D = size(infoFaces.extFaces_D,1);
 
 F = zeros(nOfElements,3);
 for iFace = 1:nOfInteriorFaces
@@ -14,13 +21,19 @@ for iFace = 1:nOfInteriorFaces
     F(infoFace(3),infoFace(4)) = iFace;
 end
 
-for iFace = 1:nOfExteriorFaces
-    infoFace = extFaces(iFace,:);
+for iFace = 1:nOfExteriorFaces_N
+    infoFace = infoFaces.extFaces_N(iFace,:);
     F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces;
+    %F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces;
+end
+
+for iFace = 1:nOfExteriorFaces_D
+    infoFace = infoFaces.extFaces_D(iFace,:);
+    F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces + nOfExteriorFaces_N;
+    %F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces;
 end
  
-infoFaces.intFaces = intFaces;
-infoFaces.extFaces = extFaces;
+
     
 
 
