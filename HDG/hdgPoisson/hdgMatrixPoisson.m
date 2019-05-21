@@ -138,7 +138,7 @@ fqN = zeros(nOfFaces*nOfFaceNodes,1);
 if Fext_N == 1
     nodes_N = faceNodes(face_N_id,:); 
     Xf_N = Xe(nodes_N,:);
-    aux_f = N1d'*(spdiags(dline,0,ngf,ngf)*neumanPoisson(N1d*Xf_N));
+    aux_f = -N1d'*(spdiags(dline,0,ngf,ngf)*neumanPoisson(N1d*Xf_N));
 
     if face_N_id == 1
         fqN(1:3) = aux_f;

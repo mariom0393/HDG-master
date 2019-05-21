@@ -11,7 +11,7 @@ s = - k*divergence(delta_u,[x, y]); %source
 
 %Function u ---> Dirichlet 
 FUNC_u = matlabFunction(u);
-u_D = FUNC(1.2,0.75,5,3,x,y); %(a,b,k,lambda,x,y)
+u_D = FUNC_u(1.2,0.75,5,3,x,y); %(a,b,k,lambda,x,y)
 
 %Neumann (y=0)
 n_N = [0 -1]; %check normal vector according to boundary
@@ -20,6 +20,7 @@ t = FUNC_t(1.2,0.75,5,3,x,y);
 
 %Robin (x=1)
 n_R = [1 0];
-FUNC_g = matlabFunction(dot(k*delta_u,n_R)+lambda*u);
+FUNC_g = matlabFunction(simplify(dot(k*delta_u,n_R)+lambda*u));
 g = FUNC_g(1.2,0.75,5,3,x,y);
 
+LaTeX_Expr = latex(g)

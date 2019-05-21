@@ -34,9 +34,8 @@ nOfElements = size(T,1);
 figure(1),clf,plotMesh(X,T);
 
 %% HDG preprocess
-[F, infoFaces] = hdg_preprocess(T);
+[F, infoFaces] = hdg_preprocess(T,X);
 nOfFaces = max(max(F)); 
-infoFaces = ExtFace_class(infoFaces,X,T);
 
 %% Viscosity parameter
 muElem = mu*ones(nOfElements,1);
@@ -60,7 +59,7 @@ nOfExteriorFaces_N = size(infoFaces.extFaces_N,1);
 
 uDirichlet = computeProjectionFaces(@analyticalPoisson,infoFaces.extFaces_D,X,T,referenceElement);
 dofDirichlet= (nOfInteriorFaces+nOfExteriorFaces_N)*nOfFaceNodes + (1:nOfExteriorFaces_D*nOfFaceNodes);
-dofUnknown = 1:nOfInteriorFaces*nOfFaceNodes+nOfExteriorFaces_N*nOfFaceNodes;
+dofUnknown = 1:(nOfInteriorFaces*nOfFaceNodes+nOfExteriorFaces_N*nOfFaceNodes);
 
 % System reduction (Dirichlet faces  are set to prescribed value)
 f = f(dofUnknown)-K(dofUnknown,dofDirichlet)*uDirichlet;
