@@ -1,13 +1,13 @@
 function s = sourcePoisson(X, mu)
 
 % Parameters
-k = 5;
-gamma = 3;
-a=1.2;
-b=0.75;
+k=2.5;
+gamma=1.1;
+a=4;
+b=0.3;
 
 % Points
 x = X(:,1);
 y = X(:,2);
 
-s = mu/k*(k.*(cosh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y))).*(b.*pi.^2.*cos(pi.*(x+gamma.*y))+a.*k.^2.*pi.^2.*sin(k.*x.*pi))-sinh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y))).*(b.*pi.*sin(pi.*(x+gamma.*y))-a.*k.*pi.*cos(k.*x.*pi)).^2-b.^2.*gamma.^2.*pi.^2.*sin(pi.*(x+gamma.*y)).^2.*sinh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y)))+b.*gamma.^2.*pi.^2.*cos(pi.*(x+gamma.*y)).*cosh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y)))));
+s = (1/k)*(k.*(gamma.^2.*sinh(gamma.*y).*cos(a.*k.*pi.*(b-x.^2))+a.*k.*pi.*sinh(gamma.*y).*sin(a.*k.*pi.*(b-x.^2)).*2.0-a.^2.*k.^2.*x.^2.*pi.^2.*sinh(gamma.*y).*cos(a.*k.*pi.*(b-x.^2)).*4.0));

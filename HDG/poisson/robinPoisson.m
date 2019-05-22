@@ -1,13 +1,13 @@
-function q_R = robinPoisson(X)
+function g_R = robinPoisson(X)
 
 % Parameters
-k = 5;
-gamma = 3;
-a=1.2;
-b=0.75;
+k=2.5;
+gamma=1.1;
+a=4;
+b=0.3;
 
 % Points
 x = X(:,1);
 y = X(:,2);
 
-q_R = (1/k)*(gamma.*sinh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y)))-cosh(cos(pi.*conj(x)+pi.*conj(gamma).*conj(y)).*conj(b)+conj(a).*sin(pi.*conj(k).*conj(x))).*conj(k).*(pi.*sin(pi.*conj(x)+pi.*conj(gamma).*conj(y)).*conj(b)-pi.*cos(pi.*conj(k).*conj(x)).*conj(a).*conj(k)));
+g_R=(1/k)*(-k.*sinh(k.*y).*cos(a.*gamma.*pi.*(b-x.^2))+cos(pi.*conj(a).*conj(gamma).*(conj(b)-conj(x).^2)).*cosh(conj(k).*conj(y)).*conj(gamma).*conj(k));

@@ -1,6 +1,6 @@
 function [KK, f, QQ, UU, Qf, Uf] = hdgMatrixPoisson(muElem,X,T,F,referenceElement,infoFaces,tau)
 
-%kappa = 5;
+
 nOfFaces = max(max(F));
 nOfElements = size(T,1);
 nOfInteriorFaces = size(infoFaces.intFaces,1);
@@ -141,8 +141,8 @@ for iface = 1:nOfFaces
     All(ind_face,ind_face) = -Auu_f;
 end
 
-gamma = 3;
-kappa = 5;
+gamma = 1.1;
+kappa = 2.5;
 %Robin term uhat
 if Fext_R == 1
     nodes = faceNodes(face_R_id,:); Xf = Xe(nodes,:); % Nodes in the face

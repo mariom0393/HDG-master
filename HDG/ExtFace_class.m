@@ -7,11 +7,13 @@ for i = 1:length(infoFaces.extFaces)
     Nod_1 = X(El_num(1),:); 
     Nod_2 = X(El_num(2),:); 
     Nod_3 = X(El_num(3),:); 
+    %Robin
     if Nod_1(2) == 0 && Nod_2(2) == 0 || Nod_1(2) == 0 && Nod_3(2)==0 || Nod_3(2) == 0 && Nod_2(2)==0  % y=0
-        infoFaces.extFaces_N(k,:) = infoFaces.extFaces(i,:);
+        infoFaces.extFaces_R(k,:) = infoFaces.extFaces(i,:);
         k = k+1;
+    %Neuman
     elseif Nod_1(1) == 1 && Nod_2(1) == 1 || Nod_1(1) == 1 && Nod_3(1)==1 || Nod_3(1) == 1 && Nod_2(1)==1 % x=1
-         infoFaces.extFaces_R(m,:) = infoFaces.extFaces(i,:);
+         infoFaces.extFaces_N(m,:) = infoFaces.extFaces(i,:);
          m=m+1;
     else
         infoFaces.extFaces_D(q,:) = infoFaces.extFaces(i,:);
