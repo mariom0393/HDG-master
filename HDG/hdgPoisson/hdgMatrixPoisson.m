@@ -78,6 +78,7 @@ nOfElementNodes = size(referenceElement.NodesCoord,1);
 nOfFaceNodes = size(referenceElement.NodesCoord1d,1);
 faceNodes = referenceElement.faceNodes;
 nOfFaces = 3; %triangles
+nodes_of_face = size(referenceElement.faceNodes,2);
 
 % Information of the reference element
 N = referenceElement.N;
@@ -164,11 +165,11 @@ if Fext_N == 1
     aux_f = -N1d'*(spdiags(dline,0,ngf,ngf)*neumanPoisson(N1d*Xf_N));
 
     if face_N_id == 1
-        fqN(1:3) = aux_f;
+        fqN(1:nodes_of_face) = aux_f;
     elseif face_N_id == 2
-        fqN(4:6) = aux_f;
+        fqN(nodes_of_face+1:2*nodes_of_face) = aux_f;
     else
-        fqN(7:9) = aux_f;
+        fqN(2*nodes_of_face+1:3*nodes_of_face) = aux_f;
     end
 end
 
@@ -183,11 +184,11 @@ if Fext_R == 1
     aux_f = -N1d'*(spdiags(dline,0,ngf,ngf)*robinPoisson(N1d*Xf_R));
 
     if face_R_id == 1
-        fqR(1:3) = aux_f;
+        fqR(1:nodes_of_face) = aux_f;
     elseif face_N_id == 2
-        fqR(4:6) = aux_f;
+        fqR(nodes_of_face+1:2*nodes_of_face) = aux_f;
     else
-        fqR(7:9) = aux_f;
+        fqR(2*nodes_of_face+1:3*nodes_of_face) = aux_f;
     end
 end
 % Elemental mapping
