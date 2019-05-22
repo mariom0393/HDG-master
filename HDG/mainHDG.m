@@ -26,7 +26,7 @@ global mu
 mu=1;
   
 %% Load computational mesh 
-degree=2; 
+degree=1; 
 load(['mesh4_P',num2str(degree)]); 
  
 nOfElements = size(T,1);

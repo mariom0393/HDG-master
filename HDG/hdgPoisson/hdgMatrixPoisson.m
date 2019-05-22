@@ -141,7 +141,7 @@ for iface = 1:nOfFaces
 end
 
 gamma = 3;
-
+kappa = 5;
 %Robin term uhat
 if Fext_R == 1
     nodes = faceNodes(face_R_id,:); Xf = Xe(nodes,:); % Nodes in the face
@@ -150,7 +150,7 @@ if Fext_R == 1
     dline = dxdxiNorm.*IPw_f';
     ind_face = (face_R_id-1)*nOfFaceNodes + (1:nOfFaceNodes);
     Auu_f = N1d'*(spdiags(dline,0,ngf,ngf)*N1d)*gamma;  
-    Arr(ind_face,ind_face) = -Auu_f;  
+    Arr(ind_face,ind_face) = -(1/kappa)*Auu_f;  
 end
 
 %Neuman term
@@ -190,9 +190,8 @@ if Fext_R == 1
         fqR(7:9) = aux_f;
     end
 end
-kappa = 5;
 % Elemental mapping
-Aqu = -kappa*mu*Auq'; Aul = -Alu'; Aql = kappa*mu*Alq';
+Aqu = -mu*Auq'; Aul = -Alu'; Aql = mu*Alq';
 A = [Auu Auq; Aqu Aqq];
 UQ = -A\[Aul;Aql];
 fUQ= A\[fe;zeros(2*nOfElementNodes,1)]; %6+12
@@ -201,5 +200,5 @@ U = UQ(1:nOfElementNodes,:);
 Uf=fUQ(1:nOfElementNodes); % maps lamba into U (1-6)
 
 Q = UQ(nOfElementNodes+1:end,:); 
-Qf=kappa*fUQ(nOfElementNodes+1:end); % maps lamba into Q (7-12)
+Qf=fUQ(nOfElementNodes+1:end); % maps lamba into Q (7-12)
 

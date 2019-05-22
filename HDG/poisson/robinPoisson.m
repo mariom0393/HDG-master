@@ -10,4 +10,4 @@ b=0.75;
 x = X(:,1);
 y = X(:,2);
 
-q_R = gamma.*sinh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y)))-cosh(cos(pi.*conj(x)+pi.*conj(gamma).*conj(y)).*conj(b)+conj(a).*sin(pi.*conj(k).*conj(x))).*conj(k).*(pi.*sin(pi.*conj(x)+pi.*conj(gamma).*conj(y)).*conj(b)-pi.*cos(pi.*conj(k).*conj(x)).*conj(a).*conj(k));
+q_R = (1/k)*(gamma.*sinh(a.*sin(k.*x.*pi)+b.*cos(pi.*(x+gamma.*y)))-cosh(cos(pi.*conj(x)+pi.*conj(gamma).*conj(y)).*conj(b)+conj(a).*sin(pi.*conj(k).*conj(x))).*conj(k).*(pi.*sin(pi.*conj(x)+pi.*conj(gamma).*conj(y)).*conj(b)-pi.*cos(pi.*conj(k).*conj(x)).*conj(a).*conj(k)));
