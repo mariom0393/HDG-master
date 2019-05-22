@@ -74,7 +74,7 @@ for iDeg=1:length(pDeg)
         if computeError==1
   
             % HDG preprocess
-            [F, infoFaces] = hdg_preprocess(T);
+            [F, infoFaces] = hdg_preprocess(T,X);
             nOfFaces = max(max(F)); 
 
             % Computation
@@ -87,11 +87,13 @@ for iDeg=1:length(pDeg)
             %Dirichlet face nodal coordinates
             nOfFaceNodes = degree+1; 
             nOfInteriorFaces = size(infoFaces.intFaces,1);
-            nOfExteriorFaces = size(infoFaces.extFaces,1); 
+            nOfExteriorFaces_D = size(infoFaces.extFaces_D,1);
+            nOfExteriorFaces_N = size(infoFaces.extFaces_N,1);
+            nOfExteriorFaces_R = size(infoFaces.extFaces_R,1);
 
-            uDirichlet = computeProjectionFaces(@analyticalPoisson,infoFaces.extFaces,X,T,referenceElement);
-            dofDirichlet= nOfInteriorFaces*nOfFaceNodes + (1:nOfExteriorFaces*nOfFaceNodes);
-            dofUnknown = 1:nOfInteriorFaces*nOfFaceNodes;
+            uDirichlet = computeProjectionFaces(@analyticalPoisson,infoFaces.extFaces_D,X,T,referenceElement);
+            dofDirichlet= (nOfInteriorFaces+nOfExteriorFaces_N+nOfExteriorFaces_R)*nOfFaceNodes + (1:nOfExteriorFaces_D*nOfFaceNodes);
+            dofUnknown = 1:(nOfInteriorFaces*nOfFaceNodes+nOfExteriorFaces_N*nOfFaceNodes+nOfExteriorFaces_R*nOfFaceNodes);
 
             % System reduction (Dirichlet faces  are set to prescribed value)
             f = f(dofUnknown)-K(dofUnknown,dofDirichlet)*uDirichlet;
@@ -100,7 +102,7 @@ for iDeg=1:length(pDeg)
             % Face solution
             disp('Solving linear system...')
             lambda = K\f; 
-            uhat = [lambda(1:nOfInteriorFaces*nOfFaceNodes); uDirichlet];
+            uhat = [lambda(1:(nOfInteriorFaces+nOfExteriorFaces_N+nOfExteriorFaces_R)*nOfFaceNodes); uDirichlet];
 
             % Elemental solution
             disp('Calculating element by element solution...')
