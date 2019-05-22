@@ -1,9 +1,9 @@
 function [KK, f, QQ, UU, Qf, Uf] = hdgMatrixPoisson(muElem,X,T,F,referenceElement,infoFaces,tau)
 
+%kappa = 5;
 nOfFaces = max(max(F));
 nOfElements = size(T,1);
 nOfInteriorFaces = size(infoFaces.intFaces,1);
-%nofNeumanFaces = size(infoFaces.extFaces_N,1);
 nOfFaceNodes = size(referenceElement.NodesCoord1d,1);
 nDOF = nOfFaces*nOfFaceNodes;
 f = zeros(nDOF,1);
@@ -16,19 +16,24 @@ for iElem = 1:nOfElements
     Xe = X(Te,:);
     Fe = F(iElem,:);
     isFeInterior = (Fe <= nOfInteriorFaces); %Boolean (1=interior face or Neuman)
-%     Fext1 = ismember(Fe(1),infoFaces.extFaces_N(:,1)); %Boolean (1=Neuman face)
-%     Fext2 = ismember(Fe(2),infoFaces.extFaces_N(:,1));
-%     Fext3 = ismember(Fe(3),infoFaces.extFaces_N(:,1));
     
     [Fext_N,ind_N] = ismember(iElem,infoFaces.extFaces_N(:,1));
     if Fext_N ==1
-    face_N_id = infoFaces.extFaces_N(ind_N,2);
+        face_N_id = infoFaces.extFaces_N(ind_N,2);
     else
         face_N_id =0;
     end
+    
+    [Fext_R,ind_R] = ismember(iElem,infoFaces.extFaces_R(:,1));
+    if Fext_R ==1
+        face_R_id = infoFaces.extFaces_R(ind_R,2);
+    else
+        face_R_id =0;
+    end
+    
   
     % elemental matrices
-    [Qe,Ue,Qfe,Ufe,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(muElem(iElem),Xe,referenceElement,tau(iElem,:),Fext_N,face_N_id);
+    [Qe,Ue,Qfe,Ufe,Alq,Alu,All,fqN,fqR,Arr] = KKeElementalMatricesIsoParametric(muElem(iElem),Xe,referenceElement,tau(iElem,:),Fext_N,face_N_id,Fext_R,face_R_id);
     
     % Interior faces seen from the second element are flipped to have
     % proper orientation
@@ -41,6 +46,7 @@ for iElem = 1:nOfElements
     
     Qe=Qe(:,indL);    Ue=Ue(:,indL);
     Alq=Alq(indL,:);  Alu=Alu(indL,:);   All=All(indL,indL);
+    Arr = Arr(indL,indL);
     %fqN=fqN(indL,:);
     
     %The local problem solver is stored for postprocess
@@ -48,8 +54,8 @@ for iElem = 1:nOfElements
     Qf{iElem} = sparse(Qfe); Uf{iElem} = sparse(Ufe);
     
     %Elemental matrices to be assembled
-    KKe = Alq*Qe + Alu*Ue + All;
-    ffe = -(Alq*Qfe + Alu*Ufe)+fqN;
+    KKe = Alq*Qe + Alu*Ue + All+Arr;
+    ffe = -(Alq*Qfe + Alu*Ufe)+fqN+fqR;
     
     aux = (1:nOfFaceNodes);
     indRC = [(Fe(1)-1)*nOfFaceNodes + aux,(Fe(2)-1)*nOfFaceNodes + aux,(Fe(3)-1)*nOfFaceNodes + aux];
@@ -66,7 +72,7 @@ KK = sparse(ind_i,ind_j,coef_K);
 
 %%
 %% ELEMENTAL MATRIX
-function [Q,U,Qf,Uf,Alq,Alu,All,fqN] = KKeElementalMatricesIsoParametric(mu,Xe,referenceElement,tau,Fext_N,face_N_id)
+function [Q,U,Qf,Uf,Alq,Alu,All,fqN,fqR,Arr] = KKeElementalMatricesIsoParametric(mu,Xe,referenceElement,tau,Fext_N,face_N_id,Fext_R,face_R_id)
 
 nOfElementNodes = size(referenceElement.NodesCoord,1);
 nOfFaceNodes = size(referenceElement.NodesCoord1d,1);
@@ -115,6 +121,7 @@ Alq = zeros(3*nOfFaceNodes,2*nOfElementNodes);
 Auu = zeros(nOfElementNodes,nOfElementNodes); 
 Alu = zeros(3*nOfFaceNodes,nOfElementNodes);
 All = zeros(3*nOfFaceNodes,3*nOfFaceNodes);
+Arr = zeros(3*nOfFaceNodes,3*nOfFaceNodes);
 %Is it possible to remove this loop?
 for iface = 1:nOfFaces    
     tau_f = tau(iface);
@@ -133,11 +140,27 @@ for iface = 1:nOfFaces
     All(ind_face,ind_face) = -Auu_f;
 end
 
+gamma = 3;
+
+%Robin term uhat
+if Fext_R == 1
+    nodes = faceNodes(face_R_id,:); Xf = Xe(nodes,:); % Nodes in the face
+    dxdxi = Nx1d*Xf(:,1); dydxi = Nx1d*Xf(:,2);
+    dxdxiNorm = sqrt(dxdxi.^2+dydxi.^2);
+    dline = dxdxiNorm.*IPw_f';
+    ind_face = (face_R_id-1)*nOfFaceNodes + (1:nOfFaceNodes);
+    Auu_f = N1d'*(spdiags(dline,0,ngf,ngf)*N1d)*gamma;  
+    Arr(ind_face,ind_face) = -Auu_f;  
+end
+
 %Neuman term
 fqN = zeros(nOfFaces*nOfFaceNodes,1); 
 if Fext_N == 1
     nodes_N = faceNodes(face_N_id,:); 
     Xf_N = Xe(nodes_N,:);
+    dxdxi = Nx1d*Xf_N(:,1); dydxi = Nx1d*Xf_N(:,2);
+    dxdxiNorm = sqrt(dxdxi.^2+dydxi.^2);
+    dline = dxdxiNorm.*IPw_f';
     aux_f = -N1d'*(spdiags(dline,0,ngf,ngf)*neumanPoisson(N1d*Xf_N));
 
     if face_N_id == 1
@@ -149,8 +172,27 @@ if Fext_N == 1
     end
 end
 
+%Robin term
+fqR = zeros(nOfFaces*nOfFaceNodes,1); 
+if Fext_R == 1
+    nodes_R = faceNodes(face_R_id,:); 
+    Xf_R = Xe(nodes_R,:);
+    dxdxi = Nx1d*Xf_R(:,1); dydxi = Nx1d*Xf_R(:,2);
+    dxdxiNorm = sqrt(dxdxi.^2+dydxi.^2);
+    dline = dxdxiNorm.*IPw_f';
+    aux_f = -N1d'*(spdiags(dline,0,ngf,ngf)*robinPoisson(N1d*Xf_R));
+
+    if face_R_id == 1
+        fqR(1:3) = aux_f;
+    elseif face_N_id == 2
+        fqR(4:6) = aux_f;
+    else
+        fqR(7:9) = aux_f;
+    end
+end
+kappa = 5;
 % Elemental mapping
-Aqu = -mu*Auq'; Aul = -Alu'; Aql = mu*Alq';
+Aqu = -kappa*mu*Auq'; Aul = -Alu'; Aql = kappa*mu*Alq';
 A = [Auu Auq; Aqu Aqq];
 UQ = -A\[Aul;Aql];
 fUQ= A\[fe;zeros(2*nOfElementNodes,1)]; %6+12
@@ -159,4 +201,5 @@ U = UQ(1:nOfElementNodes,:);
 Uf=fUQ(1:nOfElementNodes); % maps lamba into U (1-6)
 
 Q = UQ(nOfElementNodes+1:end,:); 
-Qf=fUQ(nOfElementNodes+1:end); % maps lamba into Q (7-12)
+Qf=kappa*fUQ(nOfElementNodes+1:end); % maps lamba into Q (7-12)
+

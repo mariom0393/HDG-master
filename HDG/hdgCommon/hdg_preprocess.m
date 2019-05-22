@@ -6,31 +6,35 @@ function [F, infoFaces] = hdg_preprocess(T,X)
 infoFaces.intFaces = intFaces;
 infoFaces.extFaces = extFaces;
 
-infoFaces = ExtFace_class(infoFaces,X,T);
+infoFaces = ExtFace_class(infoFaces,X,T); %Separate the external faces on Neuman and Robin
 
 nOfElements = size(T,1);
 nOfInteriorFaces = size(intFaces,1);
-nOfExteriorFaces = size(extFaces,1);
+%nOfExteriorFaces = size(extFaces,1);
 nOfExteriorFaces_N = size(infoFaces.extFaces_N,1);
 nOfExteriorFaces_D = size(infoFaces.extFaces_D,1);
+nOfExteriorFaces_R = size(infoFaces.extFaces_R,1);
 
 F = zeros(nOfElements,3);
-for iFace = 1:nOfInteriorFaces
+for iFace = 1:nOfInteriorFaces %numbering of internal faces
     infoFace = intFaces(iFace,:);
     F(infoFace(1),infoFace(2)) = iFace;
     F(infoFace(3),infoFace(4)) = iFace;
 end
 
-for iFace = 1:nOfExteriorFaces_N
+for iFace = 1:nOfExteriorFaces_N %numbering of Neuman faces
     infoFace = infoFaces.extFaces_N(iFace,:);
     F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces;
-    %F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces;
 end
 
-for iFace = 1:nOfExteriorFaces_D
-    infoFace = infoFaces.extFaces_D(iFace,:);
+for iFace = 1:nOfExteriorFaces_R %numbering of Robin faces
+    infoFace = infoFaces.extFaces_R(iFace,:);
     F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces + nOfExteriorFaces_N;
-    %F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces;
+end
+
+for iFace = 1:nOfExteriorFaces_D %Numbering of Dirichlet faces
+    infoFace = infoFaces.extFaces_D(iFace,:);
+    F(infoFace(1),infoFace(2)) = iFace + nOfInteriorFaces + nOfExteriorFaces_N +nOfExteriorFaces_R;
 end
  
 
