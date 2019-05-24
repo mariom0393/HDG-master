@@ -154,7 +154,7 @@ if Fext_R == 1
     Arr(ind_face,ind_face) = -(1/kappa)*Auu_f;  
 end
 
-%Neuman term
+%Neuman force term
 fqN = zeros(nOfFaces*nOfFaceNodes,1); 
 if Fext_N == 1
     nodes_N = faceNodes(face_N_id,:); 
@@ -173,7 +173,7 @@ if Fext_N == 1
     end
 end
 
-%Robin term
+%Robin force term
 fqR = zeros(nOfFaces*nOfFaceNodes,1); 
 if Fext_R == 1
     nodes_R = faceNodes(face_R_id,:); 
@@ -185,7 +185,7 @@ if Fext_R == 1
 
     if face_R_id == 1
         fqR(1:nodes_of_face) = aux_f;
-    elseif face_N_id == 2
+    elseif face_R_id == 2
         fqR(nodes_of_face+1:2*nodes_of_face) = aux_f;
     else
         fqR(2*nodes_of_face+1:3*nodes_of_face) = aux_f;

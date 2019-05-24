@@ -26,7 +26,7 @@ global mu
 mu=1;
   
 %% Load computational mesh 
-degree=4; 
+degree=3; 
 load(['mesh4_P',num2str(degree)]); 
  
 nOfElements = size(T,1);
@@ -76,16 +76,18 @@ disp('Calculating element by element solution...')
 [u,q]=computeElementsSolution(uhat,UU,QQ,Uf,Qf,F);
 
 figure(2),clf
+xlim([0 1])
+ylim([0 1])
 plotDiscontinuosSolution(X,T,u,referenceElement,20)
 colorbar, title('HDG solution: u')
 
-% figure(3),clf
-% plotDiscontinuosSolution(X,T,q(:,1),referenceElement,20)
-% colorbar, title('HDG solution: q_x')
-% 
-% figure(4),clf
-% plotDiscontinuosSolution(X,T,q(:,2),referenceElement,20)
-% colorbar, title('HDG solution: q_y')
+figure(3),clf
+plotDiscontinuosSolution(X,T,q(:,1),referenceElement,20)
+colorbar, title('HDG solution: q_x')
+
+figure(4),clf
+plotDiscontinuosSolution(X,T,q(:,2),referenceElement,20)
+colorbar, title('HDG solution: q_y')
 
 % figure(5),clf
 % plotjump(X,T,q(:,2),referenceElement,20)
@@ -104,6 +106,7 @@ colorbar, title('HDG solution: u')
 figure(22),clf
 plotPostprocessedSolution(X,T,u_star,referenceElement_star,20);
 colorbar, title('HDG solution: u*')
+
 
 %% Errors
 
