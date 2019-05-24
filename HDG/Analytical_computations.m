@@ -24,14 +24,19 @@ u_Dx=um(4,0.3,2.5,1.1,0,y);%x=0
 u_Dy=um(4,0.3,2.5,1.1,x,1);%y=1
 
 %Plot of the function in 3D
-x_vec0 = linspace(0,1,100);
-y_vec0 = linspace(0,1,100);
+x_vec0 = linspace(0,1,500);
+y_vec0 = linspace(0,1,500);
 
 [x_vec, y_vec] = meshgrid(x_vec0,y_vec0);
 
-z_vec = um(4,0.3,2.5,1.1,x_vec,y_vec);
+z_vec = um(4,0.3,1.1,2.5,x_vec,y_vec);
+figure(6)
+%surf(x_vec,y_vec,z_vec);
 
-surf(x_vec,y_vec,z_vec);
+s=surf(x_vec,y_vec,z_vec);
+axis equal
+colormap(jet)
+s.EdgeColor = 'none';
 
 
 %Neumann (x=1)

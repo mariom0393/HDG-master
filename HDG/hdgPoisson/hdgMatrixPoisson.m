@@ -185,7 +185,7 @@ if Fext_R == 1
 
     if face_R_id == 1
         fqR(1:nodes_of_face) = aux_f;
-    elseif face_N_id == 2
+    elseif face_R_id == 2
         fqR(nodes_of_face+1:2*nodes_of_face) = aux_f;
     else
         fqR(2*nodes_of_face+1:3*nodes_of_face) = aux_f;

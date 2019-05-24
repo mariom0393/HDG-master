@@ -12,5 +12,5 @@ x = X(:,1);
 y = X(:,2);
 
 % Solution
-u=(1/1)*(-sinh(gamma.*y).*cos(a.*k.*pi.*(b-x.^2)));
+u=(-sinh(gamma.*y).*cos(a.*k.*pi.*(b-x.^2)));
 

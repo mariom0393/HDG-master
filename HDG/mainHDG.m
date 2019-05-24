@@ -26,8 +26,8 @@ global mu
 mu=1;
   
 %% Load computational mesh 
-degree=4; 
-load(['mesh6_P',num2str(degree)]); 
+degree=2; 
+load(['mesh4_P',num2str(degree)]); 
  
 nOfElements = size(T,1);
 
@@ -91,9 +91,9 @@ colorbar, title('HDG solution: u')
 % plotjump(X,T,q(:,2),referenceElement,20)
 % colorbar, title('HDG solution: q_y')
 
-% figure(3),clf
-% plotDiscontinuosq(X,T,q,referenceElement,20)
-% colorbar, title('HDG solution: q')
+figure(3),clf
+plotDiscontinuosq(X,T,q,referenceElement,20)
+colorbar, title('HDG solution: q')
 
 % Local postprocess for superconvergence 
  disp('Performing local postprocess...')
