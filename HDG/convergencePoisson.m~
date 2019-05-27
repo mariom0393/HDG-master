@@ -128,11 +128,16 @@ for iDeg=1:length(pDeg)
             % Errors
             % analytical solution
             u_ex = @analyticalPoisson;
+            qx_ex = @analyticalPoissonqx;
+            qy_ex = @analyticalPoissonqy;
 
             %Error for the HDG solution
             Error=computeL2Norm(referenceElement,X,T,u,u_ex);
             fprintf('Error HDG = %e\n',Error);
             
+            %Error for the HDG solution q
+            Errorqx=computeL2Norm(referenceElement,X,T,q(:,1),qx_ex);
+            fprintf('Error HDG = %e\n',Error);
 
             % Error for the postprocessed solution
             ErrorPost=computeL2NormPostprocess(referenceElement_star,X,T,u_star,u_ex);

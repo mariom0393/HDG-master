@@ -30,13 +30,14 @@ mu=1;
 % Degree of polynomials to be studied
 pDeg = [1 2 3 4];
 % Number of mesh for each polynomial degree
-hRef = [6 6 6 6];
+hRef = [3 3 3 3];
 
 % bool compute VS load
 computeError = 1;
 % Error storage
 uErr = zeros(sum(hRef,2),1);
 uErrStar = zeros(sum(hRef,2),1);
+uErrqx = zeros(sum(hRef,2),1);
 hSize = zeros(sum(hRef,2),1);
 % Index to store the errors
 iErr = 1;
@@ -111,40 +112,30 @@ for iDeg=1:length(pDeg)
             figure(1),clf,
             plotMesh(X,T);
 
-            figure(2),clf
-            plotDiscontinuosSolution(X,T,u,referenceElement,20)
-            colorbar, title('HDG solution: u')
-
-            % Local postprocess for superconvergence 
-            disp('Performing local postprocess...')
-            referenceElement_star = createReferenceElementTriStar(referenceElement);
-            u_star = HDGpostprocess(X,T,u,-q,referenceElement_star);
-
-            %Plots postprocess solution
-            figure(22),clf
-            plotPostprocessedSolution(X,T,u_star,referenceElement_star,20);
-            colorbar, title('HDG solution: u*')
+            figure(3),clf
+            plotDiscontinuosSolution(X,T,q(:,1),referenceElement,20)
+            colorbar, title('HDG solution: q_x')
+            set(gca,'fontsize', 18);
 
             % Errors
             % analytical solution
             u_ex = @analyticalPoisson;
+            qx_ex = @analyticalPoissonqx;
 
             %Error for the HDG solution
             Error=computeL2Norm(referenceElement,X,T,u,u_ex);
             fprintf('Error HDG = %e\n',Error);
             
-
-            % Error for the postprocessed solution
-            ErrorPost=computeL2NormPostprocess(referenceElement_star,X,T,u_star,u_ex);
-            fprintf('Error HDG postprocessed = %e\n',ErrorPost);
-            disp(' ')
+            %Error for the HDG solution qx
+            Errorqx=computeL2Norm(referenceElement,X,T,q(:,1),qx_ex);
+            fprintf('Error HDG qx= %e\n',Error);
+            
 
             % Store solution
             solFile = sprintf('poissonDir_mesh%d_P%d_tau%d.mat',iMesh,degree,tau(1));
             save(solFile);
             
-            uErr(iErr) = Error;
-            uErrStar(iErr) = ErrorPost;
+            uErrqx(iErr) = Errorqx;
             hSize(iErr) = hMax;
             iErr = iErr + 1;
         else
@@ -152,8 +143,7 @@ for iDeg=1:length(pDeg)
             solFile = sprintf('poissonDir_mesh%d_P%d_tau%d.mat',iMesh,degree,tau(1));
             load(solFile);
             computeError = 0; % do not change this variable with the loaded value
-            uErr(iErr) = Error;
-            uErrStar(iErr) = ErrorPost;
+            uErrqx(iErr) = Errorqx;
             hSize(iErr) = hMax;
             iErr = iErr + 1;
         end
@@ -173,21 +163,13 @@ for iDeg=1:length(pDeg)
 
     % Rate of convergence
     denom = log10(hSize(meshIni+1:meshFin,:)) - log10(hSize(meshIni:meshFin-1,:));
-    slopesL2 = ( log10(uErr(meshIni+1:meshFin)) - log10(uErr(meshIni:meshFin-1)) )./denom(:,1);
-    slopesL2Star = ( log10(uErrStar(meshIni+1:meshFin)) - log10(uErrStar(meshIni:meshFin-1)) )./denom(:,1);
-    
-    disp('Slopes u')
-    disp(slopesL2)
-    disp('Slopes uStar')
-    disp(slopesL2Star)
+    slopesL2 = ( log10(uErrqx(meshIni+1:meshFin)) - log10(uErrqx(meshIni:meshFin-1)) )./denom(:,1);
     
     % Plot
     figure(100), hold on
-    plot(log10(hSize(meshIni:meshFin,1)), log10(uErr(meshIni:meshFin)), col{iDeg}, 'LineWidth', 2, 'MarkerSize', 8)
-    plot(log10(hSize(meshIni:meshFin,1)), log10(uErrStar(meshIni:meshFin)), colStar{iDeg}', 'LineWidth', 2, 'MarkerSize', 8)
+    plot(log10(hSize(meshIni:meshFin,1)), log10(uErrqx(meshIni:meshFin)), col{iDeg}, 'LineWidth', 2, 'MarkerSize', 8)
     
-    leg{2*iDeg-1} = sprintf('{\\boldmath{$u$}}, $k$=%d',degree);
-    leg{2*iDeg  } = sprintf('{\\boldmath{$u$}}$^\\star$, $k$=%d',degree);
+    leg{iDeg} = sprintf('{\\boldmath{$q_x$}}, $k$=%d',degree);
 end
 
 box on
