@@ -67,7 +67,6 @@ for g = 1:ngauss
          Neta_g*xe  Neta_g*ye];
     %Integration weight
     dvolu=IPw(g)*det(J);
-%     dvolu=IPw(g)*detJ;
     %Contribution of the current integration point to the elemental L2 Norm 
     elemL2Norm = elemL2Norm + (ue_g-u0_g)^2*dvolu;
 end

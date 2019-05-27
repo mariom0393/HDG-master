@@ -30,7 +30,7 @@ mu=1;
 % Degree of polynomials to be studied
 pDeg = [1 2 3 4];
 % Number of mesh for each polynomial degree
-hRef = [6 5 5 5];
+hRef = [6 6 6 6];
 
 % bool compute VS load
 computeError = 1;

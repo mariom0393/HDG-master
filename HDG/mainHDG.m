@@ -26,8 +26,8 @@ global mu
 mu=1;
   
 %% Load computational mesh 
-degree=2; 
-load(['mesh4_P',num2str(degree)]); 
+degree=4; 
+load(['mesh5_P',num2str(degree)]); 
  
 nOfElements = size(T,1);
 
@@ -75,44 +75,58 @@ uhat = [lambda(1:(nOfInteriorFaces+nOfExteriorFaces_N+nOfExteriorFaces_R)*nOfFac
 disp('Calculating element by element solution...')
 [u,q]=computeElementsSolution(uhat,UU,QQ,Uf,Qf,F);
 
-figure(2),clf
-plotDiscontinuosSolution(X,T,u,referenceElement,20)
-colorbar, title('HDG solution: u')
-
-% figure(3),clf
-% plotDiscontinuosSolution(X,T,q(:,1),referenceElement,20)
-% colorbar, title('HDG solution: q_x')
+% figure(2),clf
+% plotDiscontinuosSolution(X,T,u,referenceElement,20)
+% colorbar, title('HDG solution: u')
+% set(gca,'fontsize', 18);
+% 
+figure(3),clf
+plotDiscontinuosSolution(X,T,q(:,1),referenceElement,20)
+colorbar, title('HDG solution: q_x')
+set(gca,'fontsize', 18);
 % 
 % figure(4),clf
 % plotDiscontinuosSolution(X,T,q(:,2),referenceElement,20)
 % colorbar, title('HDG solution: q_y')
+% set(gca,'fontsize', 18);
 
 % figure(5),clf
 % plotjump(X,T,q(:,2),referenceElement,20)
 % colorbar, title('HDG solution: q_y')
 
-figure(3),clf
-plotDiscontinuosq(X,T,q,referenceElement,20)
-colorbar, title('HDG solution: q')
+% figure(7),clf
+% plotDiscontinuosq(X,T,q,referenceElement,20)
+% colorbar, title('HDG solution: q')
+% set(gca,'fontsize', 18);
 
 % Local postprocess for superconvergence 
  disp('Performing local postprocess...')
  referenceElement_star = createReferenceElementTriStar(referenceElement);
  u_star = HDGpostprocess(X,T,u,-q,referenceElement_star);
 
-%Plots postprocess solution
-figure(22),clf
-plotPostprocessedSolution(X,T,u_star,referenceElement_star,20);
-colorbar, title('HDG solution: u*')
-
+% %Plots postprocess solution
+% figure(22),clf
+% plotPostprocessedSolution(X,T,u_star,referenceElement_star,20);
+% colorbar, title('HDG solution: u*')
+% set(gca,'fontsize', 18);
 %% Errors
 
 % analytical solution
 u_ex = @analyticalPoisson;
+qx_ex = @analyticalPoissonqx;
+qy_ex = @analyticalPoissonqy;
 
 %Error for the HDG solution
 Error=computeL2Norm(referenceElement,X,T,u,u_ex);
 fprintf('Error HDG = %e\n',Error);
+
+%Error for qx the HDG solution
+Error=computeL2Normqx(referenceElement,X,T,q(:,1),qx_ex);
+fprintf('Error qx HDG = %e\n',Error);
+
+%Error for qy the HDG solution
+% Error=computeL2Normqy(referenceElement,X,T,q(:,2),qy_ex);
+% fprintf('Error qy HDG = %e\n',Error);
 
 % Error for the postprocessed solution
 ErrorPost=computeL2NormPostprocess(referenceElement_star,X,T,u_star,u_ex);

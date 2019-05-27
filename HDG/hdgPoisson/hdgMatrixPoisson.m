@@ -54,8 +54,8 @@ for iElem = 1:nOfElements
     Qf{iElem} = sparse(Qfe); Uf{iElem} = sparse(Ufe);
     
     %Elemental matrices to be assembled
-    KKe = Alq*Qe + Alu*Ue + All+Arr;
-    ffe = -(Alq*Qfe + Alu*Ufe)+fqN+fqR;
+    KKe = Alq*Qe + Alu*Ue + All + Arr;
+    ffe = -(Alq*Qfe + Alu*Ufe) + fqN + fqR;
     
     aux = (1:nOfFaceNodes);
     indRC = [(Fe(1)-1)*nOfFaceNodes + aux,(Fe(2)-1)*nOfFaceNodes + aux,(Fe(3)-1)*nOfFaceNodes + aux];
